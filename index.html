@@ -2462,13 +2462,13 @@ function toggleChip(el) {
 async function extractTextFromImage(dataUrl) {
   return new Promise((resolve) => {
     if (typeof Tesseract === 'undefined') { resolve(''); return; }
+    let done = false;
+    const timeout = setTimeout(() => { if (!done) resolve(''); }, 15000);
     Tesseract.recognize(dataUrl, 'spa+eng', { logger: () => {} })
-      .then(({ data: { text } }) => resolve(text))
-      .catch(() => resolve(''));
+      .then(({ data: { text } }) => { done = true; clearTimeout(timeout); resolve(text); })
+      .catch(() => { done = true; clearTimeout(timeout); resolve(''); });
   });
-}
-
-function parseAstroFromText(text) {
+}function parseAstroFromText(text) {
   const t = text.toLowerCase();
   const data = { posiciones_principales: {}, planetas_personales: {}, planetas_sociales_y_transpersonales: {} };
   const signs = ['aries','tauro','géminis','geminis','cáncer','cancer','leo','virgo','libra','escorpio','sagitario','capricornio','acuario','piscis'];
