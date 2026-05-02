@@ -7,16 +7,385 @@
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-/* ========== (Aquí van todos tus estilos, igual que antes) ========== */
-/* Por espacio no los repito, pero mantenlos exactamente como los tienes */
+/* === DESIGN TOKENS === */
+:root, [data-theme="light"] {
+  --color-bg: #f7f4f0;
+  --color-surface: #faf8f5;
+  --color-surface-2: #fcfbf9;
+  --color-surface-offset: #f0ece6;
+  --color-surface-offset-2: #e8e3dc;
+  --color-surface-dynamic: #ddd8d0;
+  --color-divider: #d4cfc8;
+  --color-border: #ccc7be;
+  --color-text: #2a2520;
+  --color-text-muted: #7a7570;
+  --color-text-faint: #b8b4ae;
+  --color-text-inverse: #f9f8f5;
+  --color-primary: #7a5c3a;
+  --color-primary-hover: #5e4329;
+  --color-primary-active: #422f1c;
+  --color-primary-highlight: #e8ddd2;
+  --color-gold: #c49a2e;
+  --color-gold-highlight: #f0e8cc;
+  --color-success: #4a7a3a;
+  --color-success-highlight: #d4e4cc;
+  --color-error: #a13040;
+  --color-error-highlight: #e4c8cc;
+  --color-accent: #8b6e4e;
+  --font-display: 'Cabinet Grotesk', 'Georgia', serif;
+  --font-body: 'Satoshi', 'Inter', sans-serif;
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+  --text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
+  --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem;
+  --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
+  --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem;
+  --radius-xl: 1rem; --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 60 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0.2 0.02 60 / 0.1);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.02 60 / 0.14);
+  --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --content-default: 960px;
+}
+[data-theme="dark"] {
+  --color-bg: #1a1612; --color-surface: #201c18; --color-surface-2: #252118;
+  --color-surface-offset: #2a251e; --color-surface-offset-2: #312b23;
+  --color-surface-dynamic: #3a3328; --color-divider: #2e2820; --color-border: #3d3630;
+  --color-text: #d4cfc8; --color-text-muted: #7a7570; --color-text-faint: #4a4540;
+  --color-text-inverse: #2a2520; --color-primary: #c49a6e;
+  --color-primary-hover: #d4aa7e; --color-primary-active: #e4ba8e;
+  --color-primary-highlight: #3a2e22; --color-gold: #e8b840;
+  --color-gold-highlight: #3a3020; --color-success: #7ab870;
+  --color-success-highlight: #2a3822; --color-error: #e86070;
+  --color-error-highlight: #3a2028; --color-accent: #c4a47e;
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.25);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.35);
+  --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.5);
+}
+
+/* === BASE === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+body {
+  min-height: 100dvh; font-family: var(--font-body); font-size: var(--text-base);
+  color: var(--color-text); background: var(--color-bg);
+  transition: background var(--transition-interactive), color var(--transition-interactive);
+}
+img { display: block; max-width: 100%; height: auto; }
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+a, button { transition: color var(--transition-interactive), background var(--transition-interactive), border-color var(--transition-interactive); }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+
+/* === LAYOUT === */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm); padding: var(--space-4) var(--space-6);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo { display: flex; align-items: center; gap: var(--space-3); }
+.logo-icon { width: 36px; height: 36px; flex-shrink: 0; }
+.logo-text { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; color: var(--color-text); }
+.logo-text span { color: var(--color-primary); }
+.theme-toggle {
+  width: 40px; height: 40px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-surface-offset); color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+.theme-toggle:hover { background: var(--color-surface-dynamic); color: var(--color-text); }
+.main { max-width: var(--content-default); margin: 0 auto; padding: var(--space-10) var(--space-6) var(--space-16); }
+
+/* === HERO === */
+.hero { text-align: center; padding-block: var(--space-10) var(--space-8); margin-bottom: var(--space-8); }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-primary); background: var(--color-primary-highlight);
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); margin-bottom: var(--space-4);
+}
+.hero h1 { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 800; color: var(--color-text); line-height: 1.15; margin-bottom: var(--space-3); }
+.hero p { font-size: var(--text-sm); color: var(--color-text-muted); max-width: 52ch; margin: 0 auto; }
+
+/* === UPLOAD === */
+.upload-section { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-bottom: var(--space-8); }
+@media (max-width: 640px) { .upload-section { grid-template-columns: 1fr; } }
+.upload-card {
+  background: var(--color-surface); border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-xl); padding: var(--space-8) var(--space-6);
+  text-align: center; cursor: pointer; transition: all var(--transition-interactive);
+  position: relative; overflow: hidden;
+}
+.upload-card:hover, .upload-card.dragover {
+  border-color: var(--color-primary); background: var(--color-primary-highlight);
+  transform: translateY(-2px); box-shadow: var(--shadow-md);
+}
+.upload-card.has-file { border-style: solid; border-color: var(--color-success); background: var(--color-success-highlight); }
+.upload-icon {
+  width: 48px; height: 48px; border-radius: var(--radius-xl);
+  background: var(--color-surface-offset); display: flex; align-items: center; justify-content: center;
+  margin: 0 auto var(--space-4); color: var(--color-primary); transition: background var(--transition-interactive);
+}
+.upload-card:hover .upload-icon { background: var(--color-primary-highlight); }
+.upload-card.has-file .upload-icon { background: var(--color-success-highlight); color: var(--color-success); }
+.upload-label { font-weight: 600; font-size: var(--text-sm); color: var(--color-text); margin-bottom: var(--space-1); display: block; }
+.upload-hint { font-size: var(--text-xs); color: var(--color-text-muted); }
+.upload-filename { font-size: var(--text-xs); color: var(--color-success); font-weight: 500; margin-top: var(--space-2); }
+input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* === CONTEXT === */
+.context-section { margin-bottom: var(--space-8); }
+.context-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); }
+.context-card label { display: block; font-size: var(--text-sm); font-weight: 600; color: var(--color-text); margin-bottom: var(--space-2); }
+.context-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+.context-chip {
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-full);
+  border: 1px solid var(--color-border); background: var(--color-surface-offset);
+  font-size: var(--text-xs); font-weight: 500; color: var(--color-text-muted);
+  cursor: pointer; text-align: center; transition: all var(--transition-interactive);
+}
+.context-chip:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-highlight); }
+.context-chip.active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-highlight); font-weight: 600; }
+
+/* === CTA === */
+.cta-section { text-align: center; margin-bottom: var(--space-8); }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  background: var(--color-primary); color: var(--color-text-inverse);
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: 600;
+  padding: var(--space-4) var(--space-8); border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md); transition: all var(--transition-interactive);
+}
+.btn-primary:hover { background: var(--color-primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.btn-primary:active { background: var(--color-primary-active); transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* === LOADING === */
+.loading-section { display: none; text-align: center; padding: var(--space-10); }
+.loading-section.visible { display: block; }
+.spinner {
+  width: 48px; height: 48px; border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto var(--space-4);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: var(--text-sm); color: var(--color-text-muted); }
+.loading-step { font-size: var(--text-xs); color: var(--color-text-faint); margin-top: var(--space-2); }
+
+/* === RESULTS === */
+.results-section { display: none; }
+.results-section.visible { display: block; }
+.results-header { margin-bottom: var(--space-6); }
+.results-header h2 { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--space-2); }
+.results-header p { font-size: var(--text-sm); color: var(--color-text-muted); }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+
+.fragrance-card {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl); overflow: hidden;
+  transition: all var(--transition-interactive); box-shadow: var(--shadow-sm);
+}
+.fragrance-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--color-primary); }
+.card-header { padding: var(--space-5) var(--space-5) var(--space-3); display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.card-rank {
+  width: 32px; height: 32px; border-radius: var(--radius-full);
+  background: var(--color-primary); color: var(--color-text-inverse);
+  font-size: var(--text-xs); font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.card-rank.gold { background: var(--color-gold); }
+.card-rank.silver { background: var(--color-text-muted); }
+.card-rank.bronze { background: var(--color-accent); }
+.match-score { font-size: var(--text-xs); font-weight: 600; color: var(--color-primary); background: var(--color-primary-highlight); padding: var(--space-1) var(--space-2); border-radius: var(--radius-full); }
+.card-body { padding: 0 var(--space-5) var(--space-5); }
+.card-code { font-size: var(--text-xs); color: var(--color-text-faint); font-weight: 500; letter-spacing: 0.06em; margin-bottom: var(--space-1); }
+.card-name { font-family: var(--font-display); font-size: var(--text-base); font-weight: 700; color: var(--color-text); margin-bottom: var(--space-1); }
+.card-brand { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-3); }
+.card-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.tag { font-size: var(--text-xs); font-weight: 500; padding: 2px var(--space-2); border-radius: var(--radius-full); background: var(--color-surface-offset); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+.tag.family { background: var(--color-gold-highlight); color: var(--color-gold); border-color: transparent; }
+.tag.occasion { background: var(--color-primary-highlight); color: var(--color-primary); border-color: transparent; }
+.card-reason { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.6; padding: var(--space-3); background: var(--color-surface-offset); border-radius: var(--radius-lg); border-left: 3px solid var(--color-primary); }
+
+/* === SEARCH === */
+.search-bar { position: relative; margin-bottom: var(--space-4); display: flex; gap: var(--space-3); }
+.search-input {
+  flex: 1; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-full); padding: var(--space-3) var(--space-5);
+  font-family: var(--font-body); font-size: var(--text-sm); color: var(--color-text);
+  outline: none; transition: border-color var(--transition-interactive);
+}
+.search-input:focus { border-color: var(--color-primary); }
+.search-input::placeholder { color: var(--color-text-faint); }
+.filter-btn {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-full); padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs); font-weight: 500; color: var(--color-text-muted);
+  white-space: nowrap; transition: all var(--transition-interactive);
+}
+.filter-btn:hover, .filter-btn.active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-highlight); }
+
+/* === ADN PANEL === */
+.adn-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-6); }
+.adn-panel h3 { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2); }
+.adn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
+.adn-item { padding: var(--space-3); background: var(--color-surface-offset); border-radius: var(--radius-lg); }
+.adn-item-label { font-size: var(--text-xs); color: var(--color-text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-1); }
+.adn-item-value { font-size: var(--text-xs); color: var(--color-text); font-weight: 500; }
+
+/* === EMPTY STATE === */
+.empty-state { text-align: center; padding: var(--space-12); color: var(--color-text-muted); }
+.empty-icon { font-size: 3rem; margin-bottom: var(--space-4); opacity: 0.4; }
+.empty-state h3 { color: var(--color-text); margin-bottom: var(--space-2); font-size: var(--text-base); }
+.empty-state p { font-size: var(--text-sm); max-width: 36ch; margin: 0 auto; }
+
+/* === NOTIFICATION === */
+.notif {
+  position: fixed; bottom: var(--space-6); right: var(--space-6);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-lg); font-size: var(--text-sm); max-width: 320px;
+  display: none; z-index: 200; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.notif.visible { display: flex; align-items: flex-start; gap: var(--space-3); }
+.notif.error { border-color: var(--color-error); }
+.notif-icon { font-size: 1.2rem; flex-shrink: 0; }
+@keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+/* === MISC === */
+.divider { height: 1px; background: var(--color-divider); margin: var(--space-8) 0; }
+.results-counter { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-4); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 </style>
 </head>
 <body>
 
 <!-- ========== (Todo tu HTML igual, sin cambios) ========== -->
-<header class="app-header">...</header>
-<main class="main">...</main>
-<div class="notif" id="notif">...</div>
+<header class="app-header">
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="17" fill="currentColor" style="color:var(--color-primary);opacity:0.12;"/>
+      <path d="M18 8 C14 8 11 11 11 15 C11 19 13 20 13 23 C13 25.5 15 27 18 27 C21 27 23 25.5 23 23 C23 20 25 19 25 15 C25 11 22 8 18 8Z" stroke="currentColor" style="color:var(--color-primary);" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+      <circle cx="15.5" cy="24.5" r="1.2" fill="currentColor" style="color:var(--color-primary);"/>
+      <circle cx="20.5" cy="24.5" r="1.2" fill="currentColor" style="color:var(--color-primary);"/>
+      <path d="M15 15 C15 13.3 16.3 12 18 12 C19.7 12 21 13.3 21 15" stroke="currentColor" style="color:var(--color-text-muted);" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <span class="logo-text">Nose<span>AI</span></span>
+  </div>
+  <button class="theme-toggle" data-theme-toggle aria-label="Cambiar tema">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</header>
+
+<main class="main">
+
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Recomendador Inteligente de Fragancias
+    </div>
+    <h1>Descubre tu fragancia perfecta<br>con IA olfativa</h1>
+    <p>Sube una foto o captura de pantalla de tu carta natal y tu bodygraph de Diseño Humano para recibir recomendaciones personalizadas de nuestra biblioteca de fragancias.</p>
+  </div>
+
+  <div class="upload-section">
+    <div class="upload-card" id="natal-drop">
+      <input type="file" id="natal-file" accept="image/*" style="display:none">
+      <div class="upload-icon" id="natal-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <span class="upload-label">Carta Natal</span>
+      <span class="upload-hint">JPG, PNG, WEBP · Captura o foto de tu carta</span>
+      <div class="upload-filename" id="natal-name"></div>
+    </div>
+
+    <div class="upload-card" id="hd-drop">
+      <input type="file" id="hd-file" accept="image/*" style="display:none">
+      <div class="upload-icon" id="hd-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <span class="upload-label">Diseño Humano</span>
+      <span class="upload-hint">JPG, PNG, WEBP · Captura o foto de tu bodygraph</span>
+      <div class="upload-filename" id="hd-name"></div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-bottom:var(--space-6);">
+    <button class="filter-btn" onclick="toggleCombinedUpload()">✦ O sube una sola imagen con ambas cartas</button>
+  </div>
+  <div id="combined-section" style="display:none; margin-bottom:var(--space-6);">
+    <div class="upload-card" id="combined-drop">
+      <input type="file" id="combined-file" accept="image/*" style="display:none">
+      <div class="upload-icon" id="combined-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      </div>
+      <span class="upload-label">Imagen Combinada</span>
+      <span class="upload-hint">JPG o PNG con ambas cartas</span>
+      <div class="upload-filename" id="combined-name"></div>
+    </div>
+  </div>
+
+  <div class="context-section">
+    <div class="context-card">
+      <label>¿Para qué ocasión buscas fragancia?</label>
+      <div class="context-grid" id="occasion-chips">
+        <div class="context-chip" data-val="Uso diario">☀️ Uso diario</div>
+        <div class="context-chip" data-val="Noche / salidas">🌙 Noche / salidas</div>
+        <div class="context-chip" data-val="Trabajo">💼 Trabajo</div>
+        <div class="context-chip" data-val="Citas">💫 Citas</div>
+        <div class="context-chip" data-val="Deporte / gym">⚡ Deporte / gym</div>
+        <div class="context-chip" data-val="Playa / verano">🌊 Playa / verano</div>
+        <div class="context-chip" data-val="Casual">🌿 Casual</div>
+        <div class="context-chip" data-val="Eventos especiales">✨ Eventos</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <button class="btn-primary" id="analyze-btn" onclick="analyzeProfile()" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/></svg>
+      Analizar mi perfil y recomendar fragancias
+    </button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="loading-section" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Analizando tu ADN olfativo…</div>
+    <div class="loading-step" id="loading-step">Leyendo imágenes…</div>
+  </div>
+
+  <div class="results-section" id="results">
+    <div class="results-header">
+      <h2 id="results-title">Tus fragancias recomendadas</h2>
+      <p id="results-subtitle">Basadas en tu ADN olfativo personalizado</p>
+    </div>
+    <div class="adn-panel" id="adn-panel">
+      <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Tu ADN Olfativo
+      </h3>
+      <div class="adn-grid" id="adn-grid"></div>
+    </div>
+    <div class="search-bar">
+      <input type="text" class="search-input" id="search-input" placeholder="Buscar por nombre, familia, ocasión…" oninput="filterResults()">
+    </div>
+    <div id="filter-chips" style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4);"></div>
+    <div class="results-counter" id="results-counter"></div>
+    <div class="results-grid" id="results-grid"></div>
+  </div>
+
+</main>
+
+<div class="notif" id="notif">
+  <span class="notif-icon" id="notif-icon">ℹ️</span>
+  <span id="notif-text"></span>
+</div>
 
 <script>
 // ========== TU BASE DE DATOS COMPLETA (FRAGRANCEDB) ==========
